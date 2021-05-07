@@ -1,19 +1,39 @@
 let db;
 
-const request = indexedDB.open("budget", 1);
+const request = window.indexedDB.open("budget", 1);
 
 request.onupgradeneeded = function (e){
+    db = e.target.result;
 
-    if(db.objectStoreNames.length === 0){
-        db.createObjectStore("BudgetStore", {autoIncrement: true});
+    db.createObjectStore("BudgetStore", {autoIncrement: true});
+
+}
+
+request.onsuccess = function (e){
+    console.log('okay, it worked');
+
+    db=e.target.result;
+
+    if(navigator.onLine){
+        console.log('Backend Online');
+        checkDatabase();
     }
+};
+
+const saveRecord = (record) => {
+
+    const transaction = db.transaction(['BudgetStore'], 'readwrite');
+
+    const store = transaction.objectStore('BudgetStore');
+
+    store.add(record);
 }
 
 function checkDatabase(){
 
-    let transaction= transaction.objecStore(['BudgetStore'], "readwrite");
+    let transaction= db.transaction(['BudgetStore'], "readwrite");
 
-    const store = transaction.objecStore('BudgetStore');
+    const store = transaction.objectStore('BudgetStore');
 
     const getAll = store.getAll();
 
@@ -32,27 +52,15 @@ function checkDatabase(){
                     if (res.length !== 0){
                         transaction =  db.transaction(['BudgetStore'], "readwrite");
 
-                        const currentStore = transaction.objecStore('BudgetStore');
+                        const currentStore = transaction.objectStore('BudgetStore');
 
                         currentStore.clear();
-                        console.log("Clearning Store");
+                        console.log("Clearing Store");
                     }
                 });
         }
     };
 }
 
-request.onsuccess = function (e){
-    console.log('okay, it worked');
 
-    db=e.target.result;
-
-    if(navigator.onLine){
-        console.log('Backend Online');
-        checkDatabase();
-    }
-};
-
-const saveRecord = (record) => {
-
-}
+window.addEventListener('online', checkDatabase);
